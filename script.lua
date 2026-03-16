@@ -43,6 +43,12 @@ local troll = {
     freeze = {enabled = false, key = nil}
 }
 
+local clickTeleport = {
+    enabled = false,
+    mode = "mouse", -- "mouse" veya "key"
+    key = nil
+}
+
 local buttonRefs = {}
 local trollButtonRefs = {}
 local nameTags = {}
@@ -50,6 +56,8 @@ local originalSizes = {}
 
 local manualFriends = {}
 local manualTeam = {enabled = false}
+
+local guiKey = Enum.KeyCode.G
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "XenaUltimate"
@@ -80,7 +88,7 @@ title.Parent = titleBar
 title.BackgroundTransparency = 1
 title.Size = UDim2.new(0, 450, 1, 0)
 title.Position = UDim2.new(0, 15, 0, 0)
-title.Text = "XENA ULTIMATE"
+title.Text = "XENA ULTIMATE | Developer: Yetri"
 title.TextColor3 = colors.bg
 title.TextSize = 24
 title.Font = Enum.Font.GothamBold
@@ -205,6 +213,407 @@ local function getKeyName(key)
         [Enum.KeyCode.Up] = "↑", [Enum.KeyCode.Down] = "↓", [Enum.KeyCode.Left] = "←", [Enum.KeyCode.Right] = "→"
     }
     return names[key] or key.Name:gsub("KeyCode.", "")
+end
+
+local function createClickTeleportButton()
+    local btn = Instance.new("TextButton")
+    btn.Name = "clickTeleport_UTILITY"
+    btn.Parent = scrollFrame
+    btn.BackgroundColor3 = colors.bg
+    btn.BorderColor3 = colors.primary
+    btn.Size = UDim2.new(1, -10, 0, 80)
+    btn.Text = ""
+    btn.ZIndex = 13
+    btn.Visible = false
+    
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Parent = btn
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Position = UDim2.new(0, 10, 0, 15)
+    iconLabel.Size = UDim2.new(0, 50, 0, 50)
+    iconLabel.Text = "👆"
+    iconLabel.TextColor3 = colors.primary
+    iconLabel.TextSize = 30
+    iconLabel.ZIndex = 14
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = btn
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Position = UDim2.new(0, 70, 0, 15)
+    nameLabel.Size = UDim2.new(1, -200, 0, 25)
+    nameLabel.Text = "CLICK TELEPORT"
+    nameLabel.TextColor3 = colors.text
+    nameLabel.TextSize = 18
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.ZIndex = 14
+    
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Parent = btn
+    descLabel.BackgroundTransparency = 1
+    descLabel.Position = UDim2.new(0, 70, 0, 40)
+    descLabel.Size = UDim2.new(1, -200, 0, 25)
+    descLabel.Text = clickTeleport.mode == "mouse" and "Sol tıkla ışınlan" or "Tuşla ışınlan"
+    descLabel.TextColor3 = colors.textDim
+    descLabel.TextSize = 12
+    descLabel.Font = Enum.Font.Gotham
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.ZIndex = 14
+    
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Parent = btn
+    keyLabel.BackgroundColor3 = colors.card
+    keyLabel.BorderColor3 = colors.primary
+    keyLabel.Position = UDim2.new(1, -140, 0, 15)
+    keyLabel.Size = UDim2.new(0, 50, 0, 25)
+    keyLabel.Text = clickTeleport.mode == "mouse" and "SOL" or (clickTeleport.key and getKeyName(clickTeleport.key) or "─")
+    keyLabel.TextColor3 = colors.primary
+    keyLabel.Font = Enum.Font.GothamBold
+    keyLabel.ZIndex = 14
+    
+    local status = Instance.new("TextLabel")
+    status.Name = "Status"
+    status.Parent = btn
+    status.BackgroundColor3 = clickTeleport.enabled and colors.success or colors.danger
+    status.Position = UDim2.new(1, -80, 0, 15)
+    status.Size = UDim2.new(0, 70, 0, 25)
+    status.Text = clickTeleport.enabled and "AKTİF" or "PASİF"
+    status.TextColor3 = colors.text
+    status.Font = Enum.Font.GothamBold
+    status.ZIndex = 14
+    
+    btn.MouseButton1Click:Connect(function()
+        clickTeleport.enabled = not clickTeleport.enabled
+        status.BackgroundColor3 = clickTeleport.enabled and colors.success or colors.danger
+        status.Text = clickTeleport.enabled and "AKTİF" or "PASİF"
+    end)
+    
+    btn.MouseButton2Click:Connect(function()
+        if _G.teleportSettings then _G.teleportSettings:Destroy() _G.teleportSettings = nil end
+        local menu = Instance.new("Frame")
+        menu.Parent = screenGui
+        menu.BackgroundColor3 = colors.bg
+        menu.BorderColor3 = colors.primary
+        menu.BorderSizePixel = 2
+        menu.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+        menu.Size = UDim2.new(0, 250, 0, 180)
+        menu.ZIndex = 200
+        menu.Active = true
+        menu.Draggable = true
+        _G.teleportSettings = menu
+        
+        local header = Instance.new("Frame")
+        header.Parent = menu
+        header.BackgroundColor3 = colors.primary
+        header.Size = UDim2.new(1, 0, 0, 30)
+        
+        local headerTitle = Instance.new("TextLabel")
+        headerTitle.Parent = header
+        headerTitle.BackgroundTransparency = 1
+        headerTitle.Position = UDim2.new(0, 10, 0, 0)
+        headerTitle.Size = UDim2.new(1, -50, 1, 0)
+        headerTitle.Text = "CLICK TELEPORT AYARLARI"
+        headerTitle.TextColor3 = colors.bg
+        headerTitle.Font = Enum.Font.GothamBold
+        headerTitle.TextSize = 12
+        headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local closeHeader = Instance.new("TextButton")
+        closeHeader.Parent = header
+        closeHeader.BackgroundColor3 = colors.danger
+        closeHeader.Position = UDim2.new(1, -30, 0, 0)
+        closeHeader.Size = UDim2.new(0, 30, 0, 30)
+        closeHeader.Text = "X"
+        closeHeader.TextColor3 = colors.text
+        closeHeader.Font = Enum.Font.GothamBold
+        closeHeader.MouseButton1Click:Connect(function() menu:Destroy() _G.teleportSettings = nil end)
+        
+        local yPos = 40
+        
+        local modeFrame = Instance.new("Frame")
+        modeFrame.Parent = menu
+        modeFrame.BackgroundColor3 = colors.card
+        modeFrame.BorderColor3 = colors.primary
+        modeFrame.Position = UDim2.new(0, 10, 0, yPos)
+        modeFrame.Size = UDim2.new(1, -20, 0, 60)
+        
+        local modeTitle = Instance.new("TextLabel")
+        modeTitle.Parent = modeFrame
+        modeTitle.BackgroundTransparency = 1
+        modeTitle.Position = UDim2.new(0, 10, 0, 5)
+        modeTitle.Size = UDim2.new(1, -130, 0, 20)
+        modeTitle.Text = "MOD"
+        modeTitle.TextColor3 = colors.primary
+        modeTitle.TextSize = 14
+        modeTitle.Font = Enum.Font.GothamBold
+        modeTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local mouseBtn = Instance.new("TextButton")
+        mouseBtn.Parent = modeFrame
+        mouseBtn.BackgroundColor3 = clickTeleport.mode == "mouse" and colors.success or colors.card
+        mouseBtn.Position = UDim2.new(1, -180, 0, 15)
+        mouseBtn.Size = UDim2.new(0, 50, 0, 30)
+        mouseBtn.Text = "SOL"
+        mouseBtn.TextColor3 = colors.text
+        mouseBtn.Font = Enum.Font.GothamBold
+        
+        local keyBtn = Instance.new("TextButton")
+        keyBtn.Parent = modeFrame
+        keyBtn.BackgroundColor3 = clickTeleport.mode == "key" and colors.success or colors.card
+        keyBtn.Position = UDim2.new(1, -120, 0, 15)
+        keyBtn.Size = UDim2.new(0, 50, 0, 30)
+        keyBtn.Text = "TUŞ"
+        keyBtn.TextColor3 = colors.text
+        keyBtn.Font = Enum.Font.GothamBold
+        
+        mouseBtn.MouseButton1Click:Connect(function()
+            clickTeleport.mode = "mouse"
+            mouseBtn.BackgroundColor3 = colors.success
+            keyBtn.BackgroundColor3 = colors.card
+            descLabel.Text = "Sol tıkla ışınlan"
+            keyLabel.Text = "SOL"
+        end)
+        
+        keyBtn.MouseButton1Click:Connect(function()
+            clickTeleport.mode = "key"
+            mouseBtn.BackgroundColor3 = colors.card
+            keyBtn.BackgroundColor3 = colors.success
+            descLabel.Text = "Tuşla ışınlan"
+        end)
+        
+        yPos = yPos + 70
+        
+        local keyFrame = Instance.new("Frame")
+        keyFrame.Parent = menu
+        keyFrame.BackgroundColor3 = colors.card
+        keyFrame.BorderColor3 = colors.primary
+        keyFrame.Position = UDim2.new(0, 10, 0, yPos)
+        keyFrame.Size = UDim2.new(1, -20, 0, 60)
+        keyFrame.Visible = clickTeleport.mode == "key"
+        
+        local keyTitle = Instance.new("TextLabel")
+        keyTitle.Parent = keyFrame
+        keyTitle.BackgroundTransparency = 1
+        keyTitle.Position = UDim2.new(0, 10, 0, 5)
+        keyTitle.Size = UDim2.new(1, -130, 0, 20)
+        keyTitle.Text = "TUŞ"
+        keyTitle.TextColor3 = colors.primary
+        keyTitle.TextSize = 14
+        keyTitle.Font = Enum.Font.GothamBold
+        keyTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local keySetBtn = Instance.new("TextButton")
+        keySetBtn.Parent = keyFrame
+        keySetBtn.BackgroundColor3 = colors.primary
+        keySetBtn.Position = UDim2.new(1, -90, 0, 15)
+        keySetBtn.Size = UDim2.new(0, 70, 0, 30)
+        keySetBtn.Text = clickTeleport.key and getKeyName(clickTeleport.key) or "ATA"
+        keySetBtn.TextColor3 = colors.bg
+        keySetBtn.Font = Enum.Font.GothamBold
+        
+        local clearBtn = Instance.new("TextButton")
+        clearBtn.Parent = keyFrame
+        clearBtn.BackgroundColor3 = colors.danger
+        clearBtn.Position = UDim2.new(1, -160, 0, 15)
+        clearBtn.Size = UDim2.new(0, 30, 0, 30)
+        clearBtn.Text = "X"
+        clearBtn.TextColor3 = colors.text
+        clearBtn.Font = Enum.Font.GothamBold
+        clearBtn.MouseButton1Click:Connect(function()
+            clickTeleport.key = nil
+            keySetBtn.Text = "ATA"
+            if clickTeleport.mode == "key" then
+                keyLabel.Text = "─"
+            end
+        end)
+        
+        keySetBtn.MouseButton1Click:Connect(function()
+            keySetBtn.Text = "..."
+            local con
+            con = UserInputService.InputBegan:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Escape then
+                    con:Disconnect()
+                    keySetBtn.Text = clickTeleport.key and getKeyName(clickTeleport.key) or "ATA"
+                elseif input.UserInputType == Enum.UserInputType.Keyboard then
+                    clickTeleport.key = input.KeyCode
+                    keySetBtn.Text = getKeyName(input.KeyCode)
+                    if clickTeleport.mode == "key" then
+                        keyLabel.Text = getKeyName(input.KeyCode)
+                    end
+                    con:Disconnect()
+                end
+            end)
+        end)
+        
+        local modeChanged = mouseBtn.MouseButton1Click:Connect(function()
+            keyFrame.Visible = false
+        end)
+        
+        keyBtn.MouseButton1Click:Connect(function()
+            keyFrame.Visible = true
+        end)
+        
+        menu.Size = UDim2.new(0, 250, 0, yPos + 80)
+    end)
+    
+    return btn
+end
+
+local function createGuiKeyButton()
+    local btn = Instance.new("TextButton")
+    btn.Name = "guiKey_UTILITY"
+    btn.Parent = scrollFrame
+    btn.BackgroundColor3 = colors.bg
+    btn.BorderColor3 = colors.primary
+    btn.Size = UDim2.new(1, -10, 0, 80)
+    btn.Text = ""
+    btn.ZIndex = 13
+    btn.Visible = false
+    
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Parent = btn
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Position = UDim2.new(0, 10, 0, 15)
+    iconLabel.Size = UDim2.new(0, 50, 0, 50)
+    iconLabel.Text = "🔑"
+    iconLabel.TextColor3 = colors.primary
+    iconLabel.TextSize = 30
+    iconLabel.ZIndex = 14
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = btn
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Position = UDim2.new(0, 70, 0, 15)
+    nameLabel.Size = UDim2.new(1, -200, 0, 25)
+    nameLabel.Text = "GUI TUŞU"
+    nameLabel.TextColor3 = colors.text
+    nameLabel.TextSize = 18
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.ZIndex = 14
+    
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Parent = btn
+    descLabel.BackgroundTransparency = 1
+    descLabel.Position = UDim2.new(0, 70, 0, 40)
+    descLabel.Size = UDim2.new(1, -200, 0, 25)
+    descLabel.Text = "Paneli aç/kapat tuşu"
+    descLabel.TextColor3 = colors.textDim
+    descLabel.TextSize = 12
+    descLabel.Font = Enum.Font.Gotham
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.ZIndex = 14
+    
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Parent = btn
+    keyLabel.BackgroundColor3 = colors.card
+    keyLabel.BorderColor3 = colors.primary
+    keyLabel.Position = UDim2.new(1, -140, 0, 15)
+    keyLabel.Size = UDim2.new(0, 50, 0, 25)
+    keyLabel.Text = getKeyName(guiKey)
+    keyLabel.TextColor3 = colors.primary
+    keyLabel.Font = Enum.Font.GothamBold
+    keyLabel.ZIndex = 14
+    
+    btn.MouseButton2Click:Connect(function()
+        if _G.guiKeySettings then _G.guiKeySettings:Destroy() _G.guiKeySettings = nil end
+        local menu = Instance.new("Frame")
+        menu.Parent = screenGui
+        menu.BackgroundColor3 = colors.bg
+        menu.BorderColor3 = colors.primary
+        menu.BorderSizePixel = 2
+        menu.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+        menu.Size = UDim2.new(0, 250, 0, 120)
+        menu.ZIndex = 200
+        menu.Active = true
+        menu.Draggable = true
+        _G.guiKeySettings = menu
+        
+        local header = Instance.new("Frame")
+        header.Parent = menu
+        header.BackgroundColor3 = colors.primary
+        header.Size = UDim2.new(1, 0, 0, 30)
+        
+        local headerTitle = Instance.new("TextLabel")
+        headerTitle.Parent = header
+        headerTitle.BackgroundTransparency = 1
+        headerTitle.Position = UDim2.new(0, 10, 0, 0)
+        headerTitle.Size = UDim2.new(1, -50, 1, 0)
+        headerTitle.Text = "GUI TUŞU AYARI"
+        headerTitle.TextColor3 = colors.bg
+        headerTitle.Font = Enum.Font.GothamBold
+        headerTitle.TextSize = 12
+        headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local closeHeader = Instance.new("TextButton")
+        closeHeader.Parent = header
+        closeHeader.BackgroundColor3 = colors.danger
+        closeHeader.Position = UDim2.new(1, -30, 0, 0)
+        closeHeader.Size = UDim2.new(0, 30, 0, 30)
+        closeHeader.Text = "X"
+        closeHeader.TextColor3 = colors.text
+        closeHeader.Font = Enum.Font.GothamBold
+        closeHeader.MouseButton1Click:Connect(function() menu:Destroy() _G.guiKeySettings = nil end)
+        
+        local keyFrame = Instance.new("Frame")
+        keyFrame.Parent = menu
+        keyFrame.BackgroundColor3 = colors.card
+        keyFrame.BorderColor3 = colors.primary
+        keyFrame.Position = UDim2.new(0, 10, 0, 40)
+        keyFrame.Size = UDim2.new(1, -20, 0, 60)
+        
+        local keyTitle = Instance.new("TextLabel")
+        keyTitle.Parent = keyFrame
+        keyTitle.BackgroundTransparency = 1
+        keyTitle.Position = UDim2.new(0, 10, 0, 5)
+        keyTitle.Size = UDim2.new(1, -130, 0, 20)
+        keyTitle.Text = "TUŞ"
+        keyTitle.TextColor3 = colors.primary
+        keyTitle.TextSize = 14
+        keyTitle.Font = Enum.Font.GothamBold
+        keyTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local keySetBtn = Instance.new("TextButton")
+        keySetBtn.Parent = keyFrame
+        keySetBtn.BackgroundColor3 = colors.primary
+        keySetBtn.Position = UDim2.new(1, -90, 0, 15)
+        keySetBtn.Size = UDim2.new(0, 70, 0, 30)
+        keySetBtn.Text = getKeyName(guiKey)
+        keySetBtn.TextColor3 = colors.bg
+        keySetBtn.Font = Enum.Font.GothamBold
+        
+        local clearBtn = Instance.new("TextButton")
+        clearBtn.Parent = keyFrame
+        clearBtn.BackgroundColor3 = colors.danger
+        clearBtn.Position = UDim2.new(1, -160, 0, 15)
+        clearBtn.Size = UDim2.new(0, 30, 0, 30)
+        clearBtn.Text = "X"
+        clearBtn.TextColor3 = colors.text
+        clearBtn.Font = Enum.Font.GothamBold
+        clearBtn.MouseButton1Click:Connect(function()
+            guiKey = Enum.KeyCode.G
+            keySetBtn.Text = "G"
+            keyLabel.Text = "G"
+        end)
+        
+        keySetBtn.MouseButton1Click:Connect(function()
+            keySetBtn.Text = "..."
+            local con
+            con = UserInputService.InputBegan:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Escape then
+                    con:Disconnect()
+                    keySetBtn.Text = getKeyName(guiKey)
+                elseif input.UserInputType == Enum.UserInputType.Keyboard then
+                    guiKey = input.KeyCode
+                    keySetBtn.Text = getKeyName(input.KeyCode)
+                    keyLabel.Text = getKeyName(input.KeyCode)
+                    con:Disconnect()
+                end
+            end)
+        end)
+    end)
+    
+    return btn
 end
 
 local function createButton(id, name, icon, category)
@@ -1375,6 +1784,8 @@ createTrollButton("headless", "HEADLESS", "👻")
 createTrollButton("freeze", "FREEZE", "❄️")
 
 local friendBtn = createFriendListButton()
+local clickTpBtn = createClickTeleportButton()
+local guiKeyBtn = createGuiKeyButton()
 
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, #scrollFrame:GetChildren() * 90)
 
@@ -1395,6 +1806,8 @@ combatTab.MouseButton1Click:Connect(function()
         end
     end
     friendBtn.Visible = false
+    clickTpBtn.Visible = false
+    guiKeyBtn.Visible = false
 end)
 
 movementTab.MouseButton1Click:Connect(function()
@@ -1414,6 +1827,8 @@ movementTab.MouseButton1Click:Connect(function()
         end
     end
     friendBtn.Visible = false
+    clickTpBtn.Visible = false
+    guiKeyBtn.Visible = false
 end)
 
 visualTab.MouseButton1Click:Connect(function()
@@ -1433,6 +1848,8 @@ visualTab.MouseButton1Click:Connect(function()
         end
     end
     friendBtn.Visible = false
+    clickTpBtn.Visible = false
+    guiKeyBtn.Visible = false
 end)
 
 utilityTab.MouseButton1Click:Connect(function()
@@ -1452,6 +1869,8 @@ utilityTab.MouseButton1Click:Connect(function()
         end
     end
     friendBtn.Visible = true
+    clickTpBtn.Visible = true
+    guiKeyBtn.Visible = true
 end)
 
 trollTab.MouseButton1Click:Connect(function()
@@ -1471,6 +1890,8 @@ trollTab.MouseButton1Click:Connect(function()
         end
     end
     friendBtn.Visible = false
+    clickTpBtn.Visible = false
+    guiKeyBtn.Visible = false
 end)
 
 local function updateButtonStatus(id, enabled)
@@ -1499,7 +1920,7 @@ end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.G then
+    if input.KeyCode == guiKey then
         screenGui.Enabled = not screenGui.Enabled
     end
     if input.UserInputType == Enum.UserInputType.Keyboard then
@@ -1531,6 +1952,39 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
                 elseif name == "sizeChanger" then
                     if feature.enabled then saveOriginalSizes() else restoreOriginalSizes() end
                 end
+            end
+        end
+        if clickTeleport.enabled and clickTeleport.mode == "key" and clickTeleport.key and input.KeyCode == clickTeleport.key then
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local mousePos = UserInputService:GetMouseLocation()
+                local ray = workspace.CurrentCamera:ScreenPointToRay(mousePos.X, mousePos.Y)
+                local params = RaycastParams.new()
+                params.FilterDescendantsInstances = {player.Character}
+                params.FilterType = Enum.RaycastFilterType.Blacklist
+                local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
+                if result then
+                    player.Character.HumanoidRootPart.CFrame = CFrame.new(result.Position + Vector3.new(0, 3, 0))
+                else
+                    player.Character.HumanoidRootPart.CFrame = CFrame.new(ray.Origin + ray.Direction * 100)
+                end
+            end
+        end
+    end
+end)
+
+mouse.Button1Down:Connect(function()
+    if clickTeleport.enabled and clickTeleport.mode == "mouse" and screenGui.Enabled then
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local mousePos = Vector2.new(mouse.X, mouse.Y)
+            local ray = workspace.CurrentCamera:ScreenPointToRay(mousePos.X, mousePos.Y)
+            local params = RaycastParams.new()
+            params.FilterDescendantsInstances = {player.Character}
+            params.FilterType = Enum.RaycastFilterType.Blacklist
+            local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
+            if result then
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(result.Position + Vector3.new(0, 3, 0))
+            else
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(ray.Origin + ray.Direction * 100)
             end
         end
     end
