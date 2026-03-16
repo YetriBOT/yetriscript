@@ -1,7 +1,10 @@
+```lua
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
@@ -11,6 +14,12 @@ for _, v in pairs(CoreGui:GetChildren()) do
         v:Destroy()
     end
 end
+
+StarterGui:SetCore("SendNotification", {
+    Title = "XENA ULTIMATE",
+    Text = "G Tuşu ile Paneli açabilirsiniz",
+    Duration = 3
+})
 
 local colors = {
     primary = Color3.fromRGB(255, 140, 0),
@@ -23,9 +32,9 @@ local colors = {
 }
 
 local features = {
-    aimbot = {enabled = false, key = nil, teamCheck = true, wallCheck = true, mode = "camera"},
-    triggerbot = {enabled = false, key = nil, teamCheck = true, wallCheck = true, delay = 0.1, range = 100},
-    esp = {enabled = false, key = nil, teamCheck = true},
+    aimbot = {enabled = false, key = nil, smoothness = 5, mode = "mouse"},
+    triggerbot = {enabled = false, key = nil, delay = 0, range = 200},
+    esp = {enabled = false, key = nil},
     nametags = {enabled = false, key = nil},
     fly = {enabled = false, key = nil, speed = 5},
     speed = {enabled = false, key = nil, multiplier = 5},
@@ -40,12 +49,13 @@ local troll = {
     spin = {enabled = false, key = nil, speed = 10},
     sizeChanger = {enabled = false, key = nil, size = 5},
     headless = {enabled = false, key = nil},
-    freeze = {enabled = false, key = nil}
+    freeze = {enabled = false, key = nil},
+    push = {enabled = false, key = nil, power = 50}
 }
 
 local clickTeleport = {
     enabled = false,
-    mode = "mouse", -- "mouse" veya "key"
+    mode = "mouse",
     key = nil
 }
 
@@ -141,7 +151,7 @@ visualTab.Size = UDim2.new(0, 120, 0, 40)
 visualTab.Text = "👁️ VISUAL"
 visualTab.TextColor3 = colors.text
 visualTab.Font = Enum.Font.GothamBold
-visualTab.ZIndex = 12
+movementTab.ZIndex = 12
 
 local utilityTab = Instance.new("TextButton")
 utilityTab.Parent = tabFrame
@@ -213,6 +223,242 @@ local function getKeyName(key)
         [Enum.KeyCode.Up] = "↑", [Enum.KeyCode.Down] = "↓", [Enum.KeyCode.Left] = "←", [Enum.KeyCode.Right] = "→"
     }
     return names[key] or key.Name:gsub("KeyCode.", "")
+end
+
+local function isFriend(target)
+    return manualTeam.enabled and manualFriends[target]
+end
+
+local function createPushButton()
+    local btn = Instance.new("TextButton")
+    btn.Name = "push_TROLL"
+    btn.Parent = scrollFrame
+    btn.BackgroundColor3 = colors.bg
+    btn.BorderColor3 = colors.primary
+    btn.Size = UDim2.new(1, -10, 0, 80)
+    btn.Text = ""
+    btn.ZIndex = 13
+    btn.Visible = false
+    
+    trollButtonRefs.push = btn
+    
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Parent = btn
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Position = UDim2.new(0, 10, 0, 15)
+    iconLabel.Size = UDim2.new(0, 50, 0, 50)
+    iconLabel.Text = "💨"
+    iconLabel.TextColor3 = colors.primary
+    iconLabel.TextSize = 30
+    iconLabel.ZIndex = 14
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = btn
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Position = UDim2.new(0, 70, 0, 15)
+    nameLabel.Size = UDim2.new(1, -200, 0, 25)
+    nameLabel.Text = "İTELEKLE"
+    nameLabel.TextColor3 = colors.text
+    nameLabel.TextSize = 18
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.ZIndex = 14
+    
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Parent = btn
+    descLabel.BackgroundTransparency = 1
+    descLabel.Position = UDim2.new(0, 70, 0, 40)
+    descLabel.Size = UDim2.new(1, -200, 0, 25)
+    descLabel.Text = "Oyuncuları uçur"
+    descLabel.TextColor3 = colors.textDim
+    descLabel.TextSize = 12
+    descLabel.Font = Enum.Font.Gotham
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.ZIndex = 14
+    
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Parent = btn
+    keyLabel.BackgroundColor3 = colors.card
+    keyLabel.BorderColor3 = colors.primary
+    keyLabel.Position = UDim2.new(1, -140, 0, 15)
+    keyLabel.Size = UDim2.new(0, 50, 0, 25)
+    keyLabel.Text = troll.push.key and getKeyName(troll.push.key) or "─"
+    keyLabel.TextColor3 = colors.primary
+    keyLabel.Font = Enum.Font.GothamBold
+    keyLabel.ZIndex = 14
+    
+    local status = Instance.new("TextLabel")
+    status.Name = "Status"
+    status.Parent = btn
+    status.BackgroundColor3 = troll.push.enabled and colors.success or colors.danger
+    status.Position = UDim2.new(1, -80, 0, 15)
+    status.Size = UDim2.new(0, 70, 0, 25)
+    status.Text = troll.push.enabled and "AKTİF" or "PASİF"
+    status.TextColor3 = colors.text
+    status.Font = Enum.Font.GothamBold
+    status.ZIndex = 14
+    
+    btn.MouseButton1Click:Connect(function()
+        troll.push.enabled = not troll.push.enabled
+        status.BackgroundColor3 = troll.push.enabled and colors.success or colors.danger
+        status.Text = troll.push.enabled and "AKTİF" or "PASİF"
+    end)
+    
+    btn.MouseButton2Click:Connect(function()
+        if _G.pushSettings then _G.pushSettings:Destroy() _G.pushSettings = nil end
+        local menu = Instance.new("Frame")
+        menu.Parent = screenGui
+        menu.BackgroundColor3 = colors.bg
+        menu.BorderColor3 = colors.primary
+        menu.BorderSizePixel = 2
+        menu.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+        menu.Size = UDim2.new(0, 250, 0, 180)
+        menu.ZIndex = 200
+        menu.Active = true
+        menu.Draggable = true
+        _G.pushSettings = menu
+        
+        local header = Instance.new("Frame")
+        header.Parent = menu
+        header.BackgroundColor3 = colors.primary
+        header.Size = UDim2.new(1, 0, 0, 30)
+        
+        local headerTitle = Instance.new("TextLabel")
+        headerTitle.Parent = header
+        headerTitle.BackgroundTransparency = 1
+        headerTitle.Position = UDim2.new(0, 10, 0, 0)
+        headerTitle.Size = UDim2.new(1, -50, 1, 0)
+        headerTitle.Text = "İTELEKLE AYARLARI"
+        headerTitle.TextColor3 = colors.bg
+        headerTitle.Font = Enum.Font.GothamBold
+        headerTitle.TextSize = 12
+        headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local closeHeader = Instance.new("TextButton")
+        closeHeader.Parent = header
+        closeHeader.BackgroundColor3 = colors.danger
+        closeHeader.Position = UDim2.new(1, -30, 0, 0)
+        closeHeader.Size = UDim2.new(0, 30, 0, 30)
+        closeHeader.Text = "X"
+        closeHeader.TextColor3 = colors.text
+        closeHeader.Font = Enum.Font.GothamBold
+        closeHeader.MouseButton1Click:Connect(function() menu:Destroy() _G.pushSettings = nil end)
+        
+        local yPos = 40
+        
+        local powerFrame = Instance.new("Frame")
+        powerFrame.Parent = menu
+        powerFrame.BackgroundColor3 = colors.card
+        powerFrame.BorderColor3 = colors.primary
+        powerFrame.Position = UDim2.new(0, 10, 0, yPos)
+        powerFrame.Size = UDim2.new(1, -20, 0, 60)
+        
+        local powerTitle = Instance.new("TextLabel")
+        powerTitle.Parent = powerFrame
+        powerTitle.BackgroundTransparency = 1
+        powerTitle.Position = UDim2.new(0, 10, 0, 5)
+        powerTitle.Size = UDim2.new(1, -130, 0, 20)
+        powerTitle.Text = "GÜÇ: " .. troll.push.power
+        powerTitle.TextColor3 = colors.primary
+        powerTitle.TextSize = 14
+        powerTitle.Font = Enum.Font.GothamBold
+        powerTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local powerSliderBg = Instance.new("Frame")
+        powerSliderBg.Parent = powerFrame
+        powerSliderBg.BackgroundColor3 = colors.bg
+        powerSliderBg.BorderColor3 = colors.primary
+        powerSliderBg.Position = UDim2.new(0, 10, 0, 30)
+        powerSliderBg.Size = UDim2.new(1, -120, 0, 20)
+        
+        local powerSlider = Instance.new("Frame")
+        powerSlider.Parent = powerSliderBg
+        powerSlider.BackgroundColor3 = colors.primary
+        powerSlider.Size = UDim2.new(troll.push.power / 100, 0, 1, 0)
+        
+        local dragging = false
+        powerSliderBg.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+        end)
+        powerSliderBg.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local mousePos = UserInputService:GetMouseLocation()
+                local absPos = powerSliderBg.AbsolutePosition
+                local relX = math.clamp(mousePos.X - absPos.X, 0, powerSliderBg.AbsoluteSize.X)
+                local percent = relX / powerSliderBg.AbsoluteSize.X
+                local value = math.floor(percent * 100)
+                powerSlider.Size = UDim2.new(percent, 0, 1, 0)
+                powerTitle.Text = "GÜÇ: " .. value
+                troll.push.power = value
+            end
+        end)
+        
+        yPos = yPos + 70
+        
+        local keyFrame = Instance.new("Frame")
+        keyFrame.Parent = menu
+        keyFrame.BackgroundColor3 = colors.card
+        keyFrame.BorderColor3 = colors.primary
+        keyFrame.Position = UDim2.new(0, 10, 0, yPos)
+        keyFrame.Size = UDim2.new(1, -20, 0, 60)
+        
+        local keyTitle = Instance.new("TextLabel")
+        keyTitle.Parent = keyFrame
+        keyTitle.BackgroundTransparency = 1
+        keyTitle.Position = UDim2.new(0, 10, 0, 5)
+        keyTitle.Size = UDim2.new(1, -130, 0, 20)
+        keyTitle.Text = "TUŞ"
+        keyTitle.TextColor3 = colors.primary
+        keyTitle.TextSize = 14
+        keyTitle.Font = Enum.Font.GothamBold
+        keyTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local keyBtn = Instance.new("TextButton")
+        keyBtn.Parent = keyFrame
+        keyBtn.BackgroundColor3 = colors.primary
+        keyBtn.Position = UDim2.new(1, -90, 0, 15)
+        keyBtn.Size = UDim2.new(0, 70, 0, 30)
+        keyBtn.Text = troll.push.key and getKeyName(troll.push.key) or "ATA"
+        keyBtn.TextColor3 = colors.bg
+        keyBtn.Font = Enum.Font.GothamBold
+        
+        local clearBtn = Instance.new("TextButton")
+        clearBtn.Parent = keyFrame
+        clearBtn.BackgroundColor3 = colors.danger
+        clearBtn.Position = UDim2.new(1, -160, 0, 15)
+        clearBtn.Size = UDim2.new(0, 30, 0, 30)
+        clearBtn.Text = "X"
+        clearBtn.TextColor3 = colors.text
+        clearBtn.Font = Enum.Font.GothamBold
+        clearBtn.MouseButton1Click:Connect(function()
+            troll.push.key = nil
+            keyBtn.Text = "ATA"
+            keyLabel.Text = "─"
+        end)
+        
+        keyBtn.MouseButton1Click:Connect(function()
+            keyBtn.Text = "..."
+            local con
+            con = UserInputService.InputBegan:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Escape then
+                    con:Disconnect()
+                    keyBtn.Text = troll.push.key and getKeyName(troll.push.key) or "ATA"
+                elseif input.UserInputType == Enum.UserInputType.Keyboard then
+                    troll.push.key = input.KeyCode
+                    keyBtn.Text = getKeyName(input.KeyCode)
+                    keyLabel.Text = getKeyName(input.KeyCode)
+                    con:Disconnect()
+                end
+            end)
+        end)
+        
+        menu.Size = UDim2.new(0, 250, 0, yPos + 80)
+    end)
+    
+    return btn
 end
 
 local function createClickTeleportButton()
@@ -655,7 +901,7 @@ local function createButton(id, name, icon, category)
     descLabel.BackgroundTransparency = 1
     descLabel.Position = UDim2.new(0, 70, 0, 40)
     descLabel.Size = UDim2.new(1, -200, 0, 25)
-    descLabel.Text = id == "aimbot" and "Otomatik nişan" or id == "triggerbot" and "Otomatik ateş" or id == "esp" and "Oyuncu işaretle" or id == "nametags" and "İsim gösterme" or id == "fly" and "Uçma" or id == "speed" and "Hız" or id == "jumpBoost" and "Zıplama" or id == "noclip" and "Duvardan geçme" or id == "multiJump" and "Çoklu zıplama" or id == "teleport" and "Işınlanma" or ""
+    descLabel.Text = id == "aimbot" and "Yumuşak nişan" or id == "triggerbot" and "Otomatik ateş" or id == "esp" and "Oyuncu işaretle" or id == "nametags" and "İsim gösterme" or id == "fly" and "Uçma" or id == "speed" and "Hız" or id == "jumpBoost" and "Zıplama" or id == "noclip" and "Duvardan geçme" or id == "multiJump" and "Çoklu zıplama" or id == "teleport" and "Işınlanma" or ""
     descLabel.TextColor3 = colors.textDim
     descLabel.TextSize = 12
     descLabel.Font = Enum.Font.Gotham
@@ -702,7 +948,7 @@ local function createButton(id, name, icon, category)
         menu.BorderColor3 = colors.primary
         menu.BorderSizePixel = 2
         menu.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
-        menu.Size = UDim2.new(0, 280, 0, 320)
+        menu.Size = UDim2.new(0, 280, 0, id == "aimbot" and 180 or id == "triggerbot" and 180 or 120)
         menu.ZIndex = 200
         menu.Active = true
         menu.Draggable = true
@@ -734,6 +980,7 @@ local function createButton(id, name, icon, category)
         closeHeader.MouseButton1Click:Connect(function() menu:Destroy() _G.settingsMenu = nil end)
         
         local yPos = 40
+        
         local keyFrame = Instance.new("Frame")
         keyFrame.Parent = menu
         keyFrame.BackgroundColor3 = colors.card
@@ -794,225 +1041,59 @@ local function createButton(id, name, icon, category)
         yPos = yPos + 70
         
         if id == "aimbot" then
-            local teamFrame = Instance.new("Frame")
-            teamFrame.Parent = menu
-            teamFrame.BackgroundColor3 = colors.card
-            teamFrame.BorderColor3 = colors.primary
-            teamFrame.Position = UDim2.new(0, 10, 0, yPos)
-            teamFrame.Size = UDim2.new(1, -20, 0, 60)
+            local smoothFrame = Instance.new("Frame")
+            smoothFrame.Parent = menu
+            smoothFrame.BackgroundColor3 = colors.card
+            smoothFrame.BorderColor3 = colors.primary
+            smoothFrame.Position = UDim2.new(0, 10, 0, yPos)
+            smoothFrame.Size = UDim2.new(1, -20, 0, 60)
             
-            local teamTitle = Instance.new("TextLabel")
-            teamTitle.Parent = teamFrame
-            teamTitle.BackgroundTransparency = 1
-            teamTitle.Position = UDim2.new(0, 10, 0, 5)
-            teamTitle.Size = UDim2.new(1, -130, 0, 20)
-            teamTitle.Text = "TAKIM KONTROLÜ"
-            teamTitle.TextColor3 = colors.primary
-            teamTitle.TextSize = 14
-            teamTitle.Font = Enum.Font.GothamBold
-            teamTitle.TextXAlignment = Enum.TextXAlignment.Left
+            local smoothTitle = Instance.new("TextLabel")
+            smoothTitle.Parent = smoothFrame
+            smoothTitle.BackgroundTransparency = 1
+            smoothTitle.Position = UDim2.new(0, 10, 0, 5)
+            smoothTitle.Size = UDim2.new(1, -130, 0, 20)
+            smoothTitle.Text = "YUMUŞAKLIK: " .. features.aimbot.smoothness
+            smoothTitle.TextColor3 = colors.primary
+            smoothTitle.TextSize = 14
+            smoothTitle.Font = Enum.Font.GothamBold
+            smoothTitle.TextXAlignment = Enum.TextXAlignment.Left
             
-            local teamBtn = Instance.new("TextButton")
-            teamBtn.Parent = teamFrame
-            teamBtn.BackgroundColor3 = features.aimbot.teamCheck and colors.success or colors.danger
-            teamBtn.Position = UDim2.new(1, -90, 0, 15)
-            teamBtn.Size = UDim2.new(0, 70, 0, 30)
-            teamBtn.Text = features.aimbot.teamCheck and "AKTİF" or "PASİF"
-            teamBtn.TextColor3 = colors.text
-            teamBtn.Font = Enum.Font.GothamBold
-            teamBtn.MouseButton1Click:Connect(function()
-                features.aimbot.teamCheck = not features.aimbot.teamCheck
-                teamBtn.BackgroundColor3 = features.aimbot.teamCheck and colors.success or colors.danger
-                teamBtn.Text = features.aimbot.teamCheck and "AKTİF" or "PASİF"
-            end)
+            local smoothSliderBg = Instance.new("Frame")
+            smoothSliderBg.Parent = smoothFrame
+            smoothSliderBg.BackgroundColor3 = colors.bg
+            smoothSliderBg.BorderColor3 = colors.primary
+            smoothSliderBg.Position = UDim2.new(0, 10, 0, 30)
+            smoothSliderBg.Size = UDim2.new(1, -120, 0, 20)
             
-            yPos = yPos + 70
-            
-            local wallFrame = Instance.new("Frame")
-            wallFrame.Parent = menu
-            wallFrame.BackgroundColor3 = colors.card
-            wallFrame.BorderColor3 = colors.primary
-            wallFrame.Position = UDim2.new(0, 10, 0, yPos)
-            wallFrame.Size = UDim2.new(1, -20, 0, 60)
-            
-            local wallTitle = Instance.new("TextLabel")
-            wallTitle.Parent = wallFrame
-            wallTitle.BackgroundTransparency = 1
-            wallTitle.Position = UDim2.new(0, 10, 0, 5)
-            wallTitle.Size = UDim2.new(1, -130, 0, 20)
-            wallTitle.Text = "DUVAR KONTROLÜ"
-            wallTitle.TextColor3 = colors.primary
-            wallTitle.TextSize = 14
-            wallTitle.Font = Enum.Font.GothamBold
-            wallTitle.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local wallBtn = Instance.new("TextButton")
-            wallBtn.Parent = wallFrame
-            wallBtn.BackgroundColor3 = features.aimbot.wallCheck and colors.success or colors.danger
-            wallBtn.Position = UDim2.new(1, -90, 0, 15)
-            wallBtn.Size = UDim2.new(0, 70, 0, 30)
-            wallBtn.Text = features.aimbot.wallCheck and "AKTİF" or "PASİF"
-            wallBtn.TextColor3 = colors.text
-            wallBtn.Font = Enum.Font.GothamBold
-            wallBtn.MouseButton1Click:Connect(function()
-                features.aimbot.wallCheck = not features.aimbot.wallCheck
-                wallBtn.BackgroundColor3 = features.aimbot.wallCheck and colors.success or colors.danger
-                wallBtn.Text = features.aimbot.wallCheck and "AKTİF" or "PASİF"
-            end)
-            
-            yPos = yPos + 70
-            
-            local modeFrame = Instance.new("Frame")
-            modeFrame.Parent = menu
-            modeFrame.BackgroundColor3 = colors.card
-            modeFrame.BorderColor3 = colors.primary
-            modeFrame.Position = UDim2.new(0, 10, 0, yPos)
-            modeFrame.Size = UDim2.new(1, -20, 0, 60)
-            
-            local modeTitle = Instance.new("TextLabel")
-            modeTitle.Parent = modeFrame
-            modeTitle.BackgroundTransparency = 1
-            modeTitle.Position = UDim2.new(0, 10, 0, 5)
-            modeTitle.Size = UDim2.new(1, -130, 0, 20)
-            modeTitle.Text = "MOD"
-            modeTitle.TextColor3 = colors.primary
-            modeTitle.TextSize = 14
-            modeTitle.Font = Enum.Font.GothamBold
-            modeTitle.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local modeBtn = Instance.new("TextButton")
-            modeBtn.Parent = modeFrame
-            modeBtn.BackgroundColor3 = colors.primary
-            modeBtn.Position = UDim2.new(1, -90, 0, 15)
-            modeBtn.Size = UDim2.new(0, 70, 0, 30)
-            modeBtn.Text = features.aimbot.mode == "camera" and "KAMERA" or "FARE"
-            modeBtn.TextColor3 = colors.bg
-            modeBtn.Font = Enum.Font.GothamBold
-            modeBtn.MouseButton1Click:Connect(function()
-                features.aimbot.mode = features.aimbot.mode == "camera" and "mouse" or "camera"
-                modeBtn.Text = features.aimbot.mode == "camera" and "KAMERA" or "FARE"
-            end)
-            
-        elseif id == "triggerbot" then
-            local teamFrame = Instance.new("Frame")
-            teamFrame.Parent = menu
-            teamFrame.BackgroundColor3 = colors.card
-            teamFrame.BorderColor3 = colors.primary
-            teamFrame.Position = UDim2.new(0, 10, 0, yPos)
-            teamFrame.Size = UDim2.new(1, -20, 0, 60)
-            
-            local teamTitle = Instance.new("TextLabel")
-            teamTitle.Parent = teamFrame
-            teamTitle.BackgroundTransparency = 1
-            teamTitle.Position = UDim2.new(0, 10, 0, 5)
-            teamTitle.Size = UDim2.new(1, -130, 0, 20)
-            teamTitle.Text = "TAKIM KONTROLÜ"
-            teamTitle.TextColor3 = colors.primary
-            teamTitle.TextSize = 14
-            teamTitle.Font = Enum.Font.GothamBold
-            teamTitle.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local teamBtn = Instance.new("TextButton")
-            teamBtn.Parent = teamFrame
-            teamBtn.BackgroundColor3 = features.triggerbot.teamCheck and colors.success or colors.danger
-            teamBtn.Position = UDim2.new(1, -90, 0, 15)
-            teamBtn.Size = UDim2.new(0, 70, 0, 30)
-            teamBtn.Text = features.triggerbot.teamCheck and "AKTİF" or "PASİF"
-            teamBtn.TextColor3 = colors.text
-            teamBtn.Font = Enum.Font.GothamBold
-            teamBtn.MouseButton1Click:Connect(function()
-                features.triggerbot.teamCheck = not features.triggerbot.teamCheck
-                teamBtn.BackgroundColor3 = features.triggerbot.teamCheck and colors.success or colors.danger
-                teamBtn.Text = features.triggerbot.teamCheck and "AKTİF" or "PASİF"
-            end)
-            
-            yPos = yPos + 70
-            
-            local wallFrame = Instance.new("Frame")
-            wallFrame.Parent = menu
-            wallFrame.BackgroundColor3 = colors.card
-            wallFrame.BorderColor3 = colors.primary
-            wallFrame.Position = UDim2.new(0, 10, 0, yPos)
-            wallFrame.Size = UDim2.new(1, -20, 0, 60)
-            
-            local wallTitle = Instance.new("TextLabel")
-            wallTitle.Parent = wallFrame
-            wallTitle.BackgroundTransparency = 1
-            wallTitle.Position = UDim2.new(0, 10, 0, 5)
-            wallTitle.Size = UDim2.new(1, -130, 0, 20)
-            wallTitle.Text = "DUVAR KONTROLÜ"
-            wallTitle.TextColor3 = colors.primary
-            wallTitle.TextSize = 14
-            wallTitle.Font = Enum.Font.GothamBold
-            wallTitle.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local wallBtn = Instance.new("TextButton")
-            wallBtn.Parent = wallFrame
-            wallBtn.BackgroundColor3 = features.triggerbot.wallCheck and colors.success or colors.danger
-            wallBtn.Position = UDim2.new(1, -90, 0, 15)
-            wallBtn.Size = UDim2.new(0, 70, 0, 30)
-            wallBtn.Text = features.triggerbot.wallCheck and "AKTİF" or "PASİF"
-            wallBtn.TextColor3 = colors.text
-            wallBtn.Font = Enum.Font.GothamBold
-            wallBtn.MouseButton1Click:Connect(function()
-                features.triggerbot.wallCheck = not features.triggerbot.wallCheck
-                wallBtn.BackgroundColor3 = features.triggerbot.wallCheck and colors.success or colors.danger
-                wallBtn.Text = features.triggerbot.wallCheck and "AKTİF" or "PASİF"
-            end)
-            
-            yPos = yPos + 70
-            
-            local delayFrame = Instance.new("Frame")
-            delayFrame.Parent = menu
-            delayFrame.BackgroundColor3 = colors.card
-            delayFrame.BorderColor3 = colors.primary
-            delayFrame.Position = UDim2.new(0, 10, 0, yPos)
-            delayFrame.Size = UDim2.new(1, -20, 0, 60)
-            
-            local delayTitle = Instance.new("TextLabel")
-            delayTitle.Parent = delayFrame
-            delayTitle.BackgroundTransparency = 1
-            delayTitle.Position = UDim2.new(0, 10, 0, 5)
-            delayTitle.Size = UDim2.new(1, -130, 0, 20)
-            delayTitle.Text = "GECİKME: " .. (features.triggerbot.delay * 1000) .. "ms"
-            delayTitle.TextColor3 = colors.primary
-            delayTitle.TextSize = 14
-            delayTitle.Font = Enum.Font.GothamBold
-            delayTitle.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local delaySliderBg = Instance.new("Frame")
-            delaySliderBg.Parent = delayFrame
-            delaySliderBg.BackgroundColor3 = colors.bg
-            delaySliderBg.BorderColor3 = colors.primary
-            delaySliderBg.Position = UDim2.new(0, 10, 0, 30)
-            delaySliderBg.Size = UDim2.new(1, -120, 0, 20)
-            
-            local delaySlider = Instance.new("Frame")
-            delaySlider.Parent = delaySliderBg
-            delaySlider.BackgroundColor3 = colors.primary
-            delaySlider.Size = UDim2.new(features.triggerbot.delay / 0.5, 0, 1, 0)
+            local smoothSlider = Instance.new("Frame")
+            smoothSlider.Parent = smoothSliderBg
+            smoothSlider.BackgroundColor3 = colors.primary
+            smoothSlider.Size = UDim2.new(features.aimbot.smoothness / 20, 0, 1, 0)
             
             local dragging = false
-            delaySliderBg.InputBegan:Connect(function(input)
+            smoothSliderBg.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
             end)
-            delaySliderBg.InputEnded:Connect(function(input)
+            smoothSliderBg.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
             end)
             UserInputService.InputChanged:Connect(function(input)
                 if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                     local mousePos = UserInputService:GetMouseLocation()
-                    local absPos = delaySliderBg.AbsolutePosition
-                    local relX = math.clamp(mousePos.X - absPos.X, 0, delaySliderBg.AbsoluteSize.X)
-                    local percent = relX / delaySliderBg.AbsoluteSize.X
-                    local value = percent * 0.5
-                    delaySlider.Size = UDim2.new(percent, 0, 1, 0)
-                    delayTitle.Text = "GECİKME: " .. math.floor(value * 1000) .. "ms"
-                    features.triggerbot.delay = value
+                    local absPos = smoothSliderBg.AbsolutePosition
+                    local relX = math.clamp(mousePos.X - absPos.X, 0, smoothSliderBg.AbsoluteSize.X)
+                    local percent = relX / smoothSliderBg.AbsoluteSize.X
+                    local value = math.floor(percent * 20)
+                    smoothSlider.Size = UDim2.new(percent, 0, 1, 0)
+                    smoothTitle.Text = "YUMUŞAKLIK: " .. value
+                    features.aimbot.smoothness = value
                 end
             end)
             
-            yPos = yPos + 70
+        elseif id == "triggerbot" then
+            features.triggerbot.delay = 0
+            features.triggerbot.range = 200
             
             local rangeFrame = Instance.new("Frame")
             rangeFrame.Parent = menu
@@ -1042,113 +1123,25 @@ local function createButton(id, name, icon, category)
             local rangeSlider = Instance.new("Frame")
             rangeSlider.Parent = rangeSliderBg
             rangeSlider.BackgroundColor3 = colors.primary
-            rangeSlider.Size = UDim2.new(features.triggerbot.range / 200, 0, 1, 0)
-            
-            local rangeDragging = false
-            rangeSliderBg.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then rangeDragging = true end
-            end)
-            rangeSliderBg.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then rangeDragging = false end
-            end)
-            UserInputService.InputChanged:Connect(function(input)
-                if rangeDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    local mousePos = UserInputService:GetMouseLocation()
-                    local absPos = rangeSliderBg.AbsolutePosition
-                    local relX = math.clamp(mousePos.X - absPos.X, 0, rangeSliderBg.AbsoluteSize.X)
-                    local percent = relX / rangeSliderBg.AbsoluteSize.X
-                    local value = math.floor(percent * 200)
-                    rangeSlider.Size = UDim2.new(percent, 0, 1, 0)
-                    rangeTitle.Text = "MESAFE: " .. value
-                    features.triggerbot.range = value
-                end
-            end)
-            
-        elseif id == "esp" then
-            local teamFrame = Instance.new("Frame")
-            teamFrame.Parent = menu
-            teamFrame.BackgroundColor3 = colors.card
-            teamFrame.BorderColor3 = colors.primary
-            teamFrame.Position = UDim2.new(0, 10, 0, yPos)
-            teamFrame.Size = UDim2.new(1, -20, 0, 60)
-            
-            local teamTitle = Instance.new("TextLabel")
-            teamTitle.Parent = teamFrame
-            teamTitle.BackgroundTransparency = 1
-            teamTitle.Position = UDim2.new(0, 10, 0, 5)
-            teamTitle.Size = UDim2.new(1, -130, 0, 20)
-            teamTitle.Text = "TAKIM KONTROLÜ"
-            teamTitle.TextColor3 = colors.primary
-            teamTitle.TextSize = 14
-            teamTitle.Font = Enum.Font.GothamBold
-            teamTitle.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local teamBtn = Instance.new("TextButton")
-            teamBtn.Parent = teamFrame
-            teamBtn.BackgroundColor3 = features.esp.teamCheck and colors.success or colors.danger
-            teamBtn.Position = UDim2.new(1, -90, 0, 15)
-            teamBtn.Size = UDim2.new(0, 70, 0, 30)
-            teamBtn.Text = features.esp.teamCheck and "AKTİF" or "PASİF"
-            teamBtn.TextColor3 = colors.text
-            teamBtn.Font = Enum.Font.GothamBold
-            teamBtn.MouseButton1Click:Connect(function()
-                features.esp.teamCheck = not features.esp.teamCheck
-                teamBtn.BackgroundColor3 = features.esp.teamCheck and colors.success or colors.danger
-                teamBtn.Text = features.esp.teamCheck and "AKTİF" or "PASİF"
-            end)
-            
-        elseif id == "fly" or id == "speed" or id == "jumpBoost" then
-            local sliderFrame = Instance.new("Frame")
-            sliderFrame.Parent = menu
-            sliderFrame.BackgroundColor3 = colors.card
-            sliderFrame.BorderColor3 = colors.primary
-            sliderFrame.Position = UDim2.new(0, 10, 0, yPos)
-            sliderFrame.Size = UDim2.new(1, -20, 0, 60)
-            
-            local currentVal = (id == "fly" and features.fly.speed) or (id == "speed" and features.speed.multiplier) or (id == "jumpBoost" and features.jumpBoost.multiplier) or 5
-            
-            local sliderTitle = Instance.new("TextLabel")
-            sliderTitle.Parent = sliderFrame
-            sliderTitle.BackgroundTransparency = 1
-            sliderTitle.Position = UDim2.new(0, 10, 0, 5)
-            sliderTitle.Size = UDim2.new(1, -130, 0, 20)
-            sliderTitle.Text = "HIZ: " .. currentVal .. "x"
-            sliderTitle.TextColor3 = colors.primary
-            sliderTitle.TextSize = 14
-            sliderTitle.Font = Enum.Font.GothamBold
-            sliderTitle.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local sliderBg = Instance.new("Frame")
-            sliderBg.Parent = sliderFrame
-            sliderBg.BackgroundColor3 = colors.bg
-            sliderBg.BorderColor3 = colors.primary
-            sliderBg.Position = UDim2.new(0, 10, 0, 30)
-            sliderBg.Size = UDim2.new(1, -120, 0, 20)
-            
-            local slider = Instance.new("Frame")
-            slider.Parent = sliderBg
-            slider.BackgroundColor3 = colors.primary
-            slider.Size = UDim2.new(currentVal / 10, 0, 1, 0)
+            rangeSlider.Size = UDim2.new(features.triggerbot.range / 500, 0, 1, 0)
             
             local dragging = false
-            sliderBg.InputBegan:Connect(function(input)
+            rangeSliderBg.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
             end)
-            sliderBg.InputEnded:Connect(function(input)
+            rangeSliderBg.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
             end)
             UserInputService.InputChanged:Connect(function(input)
                 if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                     local mousePos = UserInputService:GetMouseLocation()
-                    local absPos = sliderBg.AbsolutePosition
-                    local relX = math.clamp(mousePos.X - absPos.X, 0, sliderBg.AbsoluteSize.X)
-                    local percent = relX / sliderBg.AbsoluteSize.X
-                    local value = math.floor(percent * 90 + 10) / 10
-                    slider.Size = UDim2.new(percent, 0, 1, 0)
-                    sliderTitle.Text = "HIZ: " .. value .. "x"
-                    if id == "fly" then features.fly.speed = value
-                    elseif id == "speed" then features.speed.multiplier = value
-                    elseif id == "jumpBoost" then features.jumpBoost.multiplier = value end
+                    local absPos = rangeSliderBg.AbsolutePosition
+                    local relX = math.clamp(mousePos.X - absPos.X, 0, rangeSliderBg.AbsoluteSize.X)
+                    local percent = relX / rangeSliderBg.AbsoluteSize.X
+                    local value = math.floor(percent * 500)
+                    rangeSlider.Size = UDim2.new(percent, 0, 1, 0)
+                    rangeTitle.Text = "MESAFE: " .. value
+                    features.triggerbot.range = value
                 end
             end)
         end
@@ -1280,6 +1273,7 @@ local function createTrollButton(id, name, icon)
         closeHeader.MouseButton1Click:Connect(function() menu:Destroy() _G.trollSettings = nil end)
         
         local yPos = 40
+        
         local keyFrame = Instance.new("Frame")
         keyFrame.Parent = menu
         keyFrame.BackgroundColor3 = colors.card
@@ -1368,7 +1362,7 @@ local function createTrollButton(id, name, icon)
             local speedSlider = Instance.new("Frame")
             speedSlider.Parent = speedSliderBg
             speedSlider.BackgroundColor3 = colors.primary
-            speedSlider.Size = UDim2.new(troll.spin.speed / 20, 0, 1, 0)
+            speedSlider.Size = UDim2.new(troll.spin.speed / 50, 0, 1, 0)
             
             local dragging = false
             speedSliderBg.InputBegan:Connect(function(input)
@@ -1383,7 +1377,7 @@ local function createTrollButton(id, name, icon)
                     local absPos = speedSliderBg.AbsolutePosition
                     local relX = math.clamp(mousePos.X - absPos.X, 0, speedSliderBg.AbsoluteSize.X)
                     local percent = relX / speedSliderBg.AbsoluteSize.X
-                    local value = math.floor(percent * 20)
+                    local value = math.floor(percent * 50)
                     speedSlider.Size = UDim2.new(percent, 0, 1, 0)
                     speedTitle.Text = "DÖNÜŞ HIZI: " .. value
                     troll.spin.speed = value
@@ -1497,7 +1491,14 @@ function showTeleportMenu()
         tpMenu:Destroy()
         _G.tpMenu = nil
         features.teleport.enabled = false
-        updateButtonStatus("teleport", false)
+        if buttonRefs.teleport then
+            for _, label in pairs(buttonRefs.teleport:GetChildren()) do
+                if label.Name == "Status" then
+                    label.BackgroundColor3 = colors.danger
+                    label.Text = "PASİF"
+                end
+            end
+        end
     end)
     
     local list = Instance.new("ScrollingFrame")
@@ -1779,10 +1780,11 @@ createButton("teleport", "TELEPORT", "🌍", "UTILITY")
 
 createTrollButton("fling", "FLING", "🌀")
 createTrollButton("spin", "SPIN", "🔄")
-createTrollButton("sizeChanger", "SIZE CHANGER", "📏")
+createTrollButton("sizeChanger", "SIZE", "📏")
 createTrollButton("headless", "HEADLESS", "👻")
 createTrollButton("freeze", "FREEZE", "❄️")
 
+local pushBtn = createPushButton()
 local friendBtn = createFriendListButton()
 local clickTpBtn = createClickTeleportButton()
 local guiKeyBtn = createGuiKeyButton()
@@ -1808,6 +1810,7 @@ combatTab.MouseButton1Click:Connect(function()
     friendBtn.Visible = false
     clickTpBtn.Visible = false
     guiKeyBtn.Visible = false
+    pushBtn.Visible = false
 end)
 
 movementTab.MouseButton1Click:Connect(function()
@@ -1829,6 +1832,7 @@ movementTab.MouseButton1Click:Connect(function()
     friendBtn.Visible = false
     clickTpBtn.Visible = false
     guiKeyBtn.Visible = false
+    pushBtn.Visible = false
 end)
 
 visualTab.MouseButton1Click:Connect(function()
@@ -1850,6 +1854,7 @@ visualTab.MouseButton1Click:Connect(function()
     friendBtn.Visible = false
     clickTpBtn.Visible = false
     guiKeyBtn.Visible = false
+    pushBtn.Visible = false
 end)
 
 utilityTab.MouseButton1Click:Connect(function()
@@ -1871,6 +1876,7 @@ utilityTab.MouseButton1Click:Connect(function()
     friendBtn.Visible = true
     clickTpBtn.Visible = true
     guiKeyBtn.Visible = true
+    pushBtn.Visible = false
 end)
 
 trollTab.MouseButton1Click:Connect(function()
@@ -1892,6 +1898,7 @@ trollTab.MouseButton1Click:Connect(function()
     friendBtn.Visible = false
     clickTpBtn.Visible = false
     guiKeyBtn.Visible = false
+    pushBtn.Visible = true
 end)
 
 local function updateButtonStatus(id, enabled)
@@ -1973,7 +1980,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 mouse.Button1Down:Connect(function()
-    if clickTeleport.enabled and clickTeleport.mode == "mouse" and screenGui.Enabled then
+    if clickTeleport.enabled and clickTeleport.mode == "mouse" then
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local mousePos = Vector2.new(mouse.X, mouse.Y)
             local ray = workspace.CurrentCamera:ScreenPointToRay(mousePos.X, mousePos.Y)
@@ -1985,6 +1992,24 @@ mouse.Button1Down:Connect(function()
                 player.Character.HumanoidRootPart.CFrame = CFrame.new(result.Position + Vector3.new(0, 3, 0))
             else
                 player.Character.HumanoidRootPart.CFrame = CFrame.new(ray.Origin + ray.Direction * 100)
+            end
+        end
+    end
+end)
+
+mouse.Button1Down:Connect(function()
+    if troll.push.enabled then
+        local mousePos = Vector2.new(mouse.X, mouse.Y)
+        local ray = workspace.CurrentCamera:ScreenPointToRay(mousePos.X, mousePos.Y)
+        local params = RaycastParams.new()
+        params.FilterDescendantsInstances = {player.Character}
+        params.FilterType = Enum.RaycastFilterType.Blacklist
+        local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
+        if result and result.Instance and result.Instance:IsDescendantOf(Players) then
+            local target = Players:GetPlayerFromCharacter(result.Instance.Parent)
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                local direction = (target.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Unit
+                target.Character.HumanoidRootPart.Velocity = direction * troll.push.power * 10
             end
         end
     end
@@ -2053,12 +2078,6 @@ RunService.Heartbeat:Connect(function()
                 
                 if manualTeam.enabled and manualFriends[v] then
                     highlight.FillColor = colors.success
-                elseif not manualTeam.enabled and features.esp.teamCheck then
-                    if (player.Team and v.Team and player.Team == v.Team) or (player.TeamColor and v.TeamColor and player.TeamColor == v.TeamColor) then
-                        highlight.FillColor = colors.success
-                    else
-                        highlight.FillColor = colors.danger
-                    end
                 else
                     highlight.FillColor = colors.danger
                 end
@@ -2081,26 +2100,25 @@ RunService.RenderStepped:Connect(function()
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("Head") then
                 if manualTeam.enabled and manualFriends[v] then continue end
-                if not manualTeam.enabled and features.aimbot.teamCheck then
-                    if (player.Team and v.Team and player.Team == v.Team) or (player.TeamColor and v.TeamColor and player.TeamColor == v.TeamColor) then
-                        continue
-                    end
-                end
-                if features.aimbot.wallCheck then
-                    local ray = Ray.new(workspace.CurrentCamera.CFrame.Position, (v.Character.Head.Position - workspace.CurrentCamera.CFrame.Position).Unit * 1000)
-                    local hit = workspace:FindPartOnRay(ray, player.Character)
-                    if hit and hit:IsA("BasePart") and not hit:IsDescendantOf(v.Character) then continue end
-                end
                 local d = (player.Character.Head.Position - v.Character.Head.Position).Magnitude
                 if d < dist and d < 200 then dist, closest = d, v end
             end
         end
         if closest then
             if features.aimbot.mode == "camera" then
-                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, closest.Character.Head.Position)
+                local targetPos = closest.Character.Head.Position
+                local currentCF = workspace.CurrentCamera.CFrame
+                local goalCF = CFrame.new(currentCF.Position, targetPos)
+                local smoothness = features.aimbot.smoothness / 10
+                workspace.CurrentCamera.CFrame = currentCF:Lerp(goalCF, smoothness)
             else
-                local pos = workspace.CurrentCamera:WorldToViewportPoint(closest.Character.Head.Position)
-                mousemoverel(pos.X - mouse.X, pos.Y - mouse.Y)
+                local targetPos = workspace.CurrentCamera:WorldToViewportPoint(closest.Character.Head.Position)
+                local currentMousePos = Vector2.new(mouse.X, mouse.Y)
+                local targetMousePos = Vector2.new(targetPos.X, targetPos.Y)
+                local smoothness = features.aimbot.smoothness / 10
+                local newX = currentMousePos.X + (targetMousePos.X - currentMousePos.X) * smoothness
+                local newY = currentMousePos.Y + (targetMousePos.Y - currentMousePos.Y) * smoothness
+                mousemoverel(newX - currentMousePos.X, newY - currentMousePos.Y)
             end
         end
     end
@@ -2111,22 +2129,11 @@ RunService.RenderStepped:Connect(function()
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("Head") then
                 if manualTeam.enabled and manualFriends[v] then continue end
-                if not manualTeam.enabled and features.triggerbot.teamCheck then
-                    if (player.Team and v.Team and player.Team == v.Team) or (player.TeamColor and v.TeamColor and player.TeamColor == v.TeamColor) then
-                        continue
-                    end
-                end
-                if features.triggerbot.wallCheck then
-                    local ray = Ray.new(workspace.CurrentCamera.CFrame.Position, (v.Character.Head.Position - workspace.CurrentCamera.CFrame.Position).Unit * 1000)
-                    local hit = workspace:FindPartOnRay(ray, player.Character)
-                    if hit and hit:IsA("BasePart") and not hit:IsDescendantOf(v.Character) then continue end
-                end
                 local distance = (player.Character.Head.Position - v.Character.Head.Position).Magnitude
                 if distance <= features.triggerbot.range then
                     local pos = workspace.CurrentCamera:WorldToViewportPoint(v.Character.Head.Position)
                     local center = Vector2.new(workspace.CurrentCamera.ViewportSize.X/2, workspace.CurrentCamera.ViewportSize.Y/2)
                     if (Vector2.new(pos.X, pos.Y) - center).Magnitude < 50 then
-                        task.wait(features.triggerbot.delay)
                         mouse1click()
                     end
                 end
@@ -2217,3 +2224,4 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+```
