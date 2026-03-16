@@ -1,22 +1,29 @@
-```lua
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
-local TweenService = game:GetService("TweenService")
 local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 
 for _, v in pairs(CoreGui:GetChildren()) do
-    if v.Name == "XenaUltimate" then
+    if v.Name == "Xena" then
         v:Destroy()
     end
 end
 
+local function safeFunction(func, ...)
+    if func then
+        return func(...)
+    end
+end
+
+_G.mousemoverel = _G.mousemoverel or function() end
+_G.mouse1click = _G.mouse1click or function() end
+
 StarterGui:SetCore("SendNotification", {
-    Title = "XENA ULTIMATE",
+    Title = "XENA",
     Text = "G Tuşu ile Paneli açabilirsiniz",
     Duration = 3
 })
@@ -33,7 +40,7 @@ local colors = {
 
 local features = {
     aimbot = {enabled = false, key = nil, smoothness = 5, mode = "mouse"},
-    triggerbot = {enabled = false, key = nil, delay = 0, range = 200},
+    triggerbot = {enabled = false, key = nil, range = 200},
     esp = {enabled = false, key = nil},
     nametags = {enabled = false, key = nil},
     fly = {enabled = false, key = nil, speed = 5},
@@ -50,7 +57,9 @@ local troll = {
     sizeChanger = {enabled = false, key = nil, size = 5},
     headless = {enabled = false, key = nil},
     freeze = {enabled = false, key = nil},
-    push = {enabled = false, key = nil, power = 50}
+    push = {enabled = false, key = nil, power = 50},
+    sikme = {enabled = false, key = nil},
+    otuzbir = {enabled = false, key = nil}
 }
 
 local clickTeleport = {
@@ -70,7 +79,7 @@ local manualTeam = {enabled = false}
 local guiKey = Enum.KeyCode.G
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "XenaUltimate"
+screenGui.Name = "Xena"
 screenGui.Parent = CoreGui
 screenGui.ResetOnSpawn = false
 screenGui.Enabled = true
@@ -98,7 +107,7 @@ title.Parent = titleBar
 title.BackgroundTransparency = 1
 title.Size = UDim2.new(0, 450, 1, 0)
 title.Position = UDim2.new(0, 15, 0, 0)
-title.Text = "XENA ULTIMATE | Developer: Yetri"
+title.Text = "XENA | Developer: Yetri"
 title.TextColor3 = colors.bg
 title.TextSize = 24
 title.Font = Enum.Font.GothamBold
@@ -151,7 +160,7 @@ visualTab.Size = UDim2.new(0, 120, 0, 40)
 visualTab.Text = "👁️ VISUAL"
 visualTab.TextColor3 = colors.text
 visualTab.Font = Enum.Font.GothamBold
-movementTab.ZIndex = 12
+visualTab.ZIndex = 12
 
 local utilityTab = Instance.new("TextButton")
 utilityTab.Parent = tabFrame
@@ -196,33 +205,7 @@ layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 local function getKeyName(key)
     if not key then return "─" end
-    local names = {
-        [Enum.KeyCode.One] = "1", [Enum.KeyCode.Two] = "2", [Enum.KeyCode.Three] = "3",
-        [Enum.KeyCode.Four] = "4", [Enum.KeyCode.Five] = "5", [Enum.KeyCode.Six] = "6",
-        [Enum.KeyCode.Seven] = "7", [Enum.KeyCode.Eight] = "8", [Enum.KeyCode.Nine] = "9",
-        [Enum.KeyCode.Zero] = "0", [Enum.KeyCode.Q] = "Q", [Enum.KeyCode.W] = "W",
-        [Enum.KeyCode.E] = "E", [Enum.KeyCode.R] = "R", [Enum.KeyCode.T] = "T",
-        [Enum.KeyCode.Y] = "Y", [Enum.KeyCode.U] = "U", [Enum.KeyCode.I] = "I",
-        [Enum.KeyCode.O] = "O", [Enum.KeyCode.P] = "P", [Enum.KeyCode.A] = "A",
-        [Enum.KeyCode.S] = "S", [Enum.KeyCode.D] = "D", [Enum.KeyCode.F] = "F",
-        [Enum.KeyCode.G] = "G", [Enum.KeyCode.H] = "H", [Enum.KeyCode.J] = "J",
-        [Enum.KeyCode.K] = "K", [Enum.KeyCode.L] = "L", [Enum.KeyCode.Z] = "Z",
-        [Enum.KeyCode.X] = "X", [Enum.KeyCode.C] = "C", [Enum.KeyCode.V] = "V",
-        [Enum.KeyCode.B] = "B", [Enum.KeyCode.N] = "N", [Enum.KeyCode.M] = "M",
-        [Enum.KeyCode.LeftShift] = "LShift", [Enum.KeyCode.RightShift] = "RShift",
-        [Enum.KeyCode.LeftControl] = "LCtrl", [Enum.KeyCode.RightControl] = "RCtrl",
-        [Enum.KeyCode.LeftAlt] = "LAlt", [Enum.KeyCode.RightAlt] = "RAlt",
-        [Enum.KeyCode.Space] = "Space", [Enum.KeyCode.Return] = "Enter",
-        [Enum.KeyCode.Backspace] = "Backspace", [Enum.KeyCode.Tab] = "Tab",
-        [Enum.KeyCode.F1] = "F1", [Enum.KeyCode.F2] = "F2", [Enum.KeyCode.F3] = "F3",
-        [Enum.KeyCode.F4] = "F4", [Enum.KeyCode.F5] = "F5", [Enum.KeyCode.F6] = "F6",
-        [Enum.KeyCode.F7] = "F7", [Enum.KeyCode.F8] = "F8", [Enum.KeyCode.F9] = "F9",
-        [Enum.KeyCode.F10] = "F10", [Enum.KeyCode.F11] = "F11", [Enum.KeyCode.F12] = "F12",
-        [Enum.KeyCode.Insert] = "Ins", [Enum.KeyCode.Home] = "Home", [Enum.KeyCode.PageUp] = "PgUp",
-        [Enum.KeyCode.Delete] = "Del", [Enum.KeyCode.End] = "End", [Enum.KeyCode.PageDown] = "PgDn",
-        [Enum.KeyCode.Up] = "↑", [Enum.KeyCode.Down] = "↓", [Enum.KeyCode.Left] = "←", [Enum.KeyCode.Right] = "→"
-    }
-    return names[key] or key.Name:gsub("KeyCode.", "")
+    return key.Name:gsub("KeyCode.", "")
 end
 
 local function isFriend(target)
@@ -456,6 +439,358 @@ local function createPushButton()
         end)
         
         menu.Size = UDim2.new(0, 250, 0, yPos + 80)
+    end)
+    
+    return btn
+end
+
+local function createSikmeButton()
+    local btn = Instance.new("TextButton")
+    btn.Name = "sikme_TROLL"
+    btn.Parent = scrollFrame
+    btn.BackgroundColor3 = colors.bg
+    btn.BorderColor3 = colors.primary
+    btn.Size = UDim2.new(1, -10, 0, 80)
+    btn.Text = ""
+    btn.ZIndex = 13
+    btn.Visible = false
+    
+    trollButtonRefs.sikme = btn
+    
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Parent = btn
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Position = UDim2.new(0, 10, 0, 15)
+    iconLabel.Size = UDim2.new(0, 50, 0, 50)
+    iconLabel.Text = "🍆"
+    iconLabel.TextColor3 = colors.primary
+    iconLabel.TextSize = 30
+    iconLabel.ZIndex = 14
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = btn
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Position = UDim2.new(0, 70, 0, 15)
+    nameLabel.Size = UDim2.new(1, -200, 0, 25)
+    nameLabel.Text = "SİKME"
+    nameLabel.TextColor3 = colors.text
+    nameLabel.TextSize = 18
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.ZIndex = 14
+    
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Parent = btn
+    descLabel.BackgroundTransparency = 1
+    descLabel.Position = UDim2.new(0, 70, 0, 40)
+    descLabel.Size = UDim2.new(1, -200, 0, 25)
+    descLabel.Text = "Oyuncuları sik gibi yap"
+    descLabel.TextColor3 = colors.textDim
+    descLabel.TextSize = 12
+    descLabel.Font = Enum.Font.Gotham
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.ZIndex = 14
+    
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Parent = btn
+    keyLabel.BackgroundColor3 = colors.card
+    keyLabel.BorderColor3 = colors.primary
+    keyLabel.Position = UDim2.new(1, -140, 0, 15)
+    keyLabel.Size = UDim2.new(0, 50, 0, 25)
+    keyLabel.Text = troll.sikme.key and getKeyName(troll.sikme.key) or "─"
+    keyLabel.TextColor3 = colors.primary
+    keyLabel.Font = Enum.Font.GothamBold
+    keyLabel.ZIndex = 14
+    
+    local status = Instance.new("TextLabel")
+    status.Name = "Status"
+    status.Parent = btn
+    status.BackgroundColor3 = troll.sikme.enabled and colors.success or colors.danger
+    status.Position = UDim2.new(1, -80, 0, 15)
+    status.Size = UDim2.new(0, 70, 0, 25)
+    status.Text = troll.sikme.enabled and "AKTİF" or "PASİF"
+    status.TextColor3 = colors.text
+    status.Font = Enum.Font.GothamBold
+    status.ZIndex = 14
+    
+    btn.MouseButton1Click:Connect(function()
+        troll.sikme.enabled = not troll.sikme.enabled
+        status.BackgroundColor3 = troll.sikme.enabled and colors.success or colors.danger
+        status.Text = troll.sikme.enabled and "AKTİF" or "PASİF"
+    end)
+    
+    btn.MouseButton2Click:Connect(function()
+        if _G.sikmeSettings then _G.sikmeSettings:Destroy() _G.sikmeSettings = nil end
+        local menu = Instance.new("Frame")
+        menu.Parent = screenGui
+        menu.BackgroundColor3 = colors.bg
+        menu.BorderColor3 = colors.primary
+        menu.BorderSizePixel = 2
+        menu.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+        menu.Size = UDim2.new(0, 250, 0, 120)
+        menu.ZIndex = 200
+        menu.Active = true
+        menu.Draggable = true
+        _G.sikmeSettings = menu
+        
+        local header = Instance.new("Frame")
+        header.Parent = menu
+        header.BackgroundColor3 = colors.primary
+        header.Size = UDim2.new(1, 0, 0, 30)
+        
+        local headerTitle = Instance.new("TextLabel")
+        headerTitle.Parent = header
+        headerTitle.BackgroundTransparency = 1
+        headerTitle.Position = UDim2.new(0, 10, 0, 0)
+        headerTitle.Size = UDim2.new(1, -50, 1, 0)
+        headerTitle.Text = "SİKME AYARLARI"
+        headerTitle.TextColor3 = colors.bg
+        headerTitle.Font = Enum.Font.GothamBold
+        headerTitle.TextSize = 12
+        headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local closeHeader = Instance.new("TextButton")
+        closeHeader.Parent = header
+        closeHeader.BackgroundColor3 = colors.danger
+        closeHeader.Position = UDim2.new(1, -30, 0, 0)
+        closeHeader.Size = UDim2.new(0, 30, 0, 30)
+        closeHeader.Text = "X"
+        closeHeader.TextColor3 = colors.text
+        closeHeader.Font = Enum.Font.GothamBold
+        closeHeader.MouseButton1Click:Connect(function() menu:Destroy() _G.sikmeSettings = nil end)
+        
+        local keyFrame = Instance.new("Frame")
+        keyFrame.Parent = menu
+        keyFrame.BackgroundColor3 = colors.card
+        keyFrame.BorderColor3 = colors.primary
+        keyFrame.Position = UDim2.new(0, 10, 0, 40)
+        keyFrame.Size = UDim2.new(1, -20, 0, 60)
+        
+        local keyTitle = Instance.new("TextLabel")
+        keyTitle.Parent = keyFrame
+        keyTitle.BackgroundTransparency = 1
+        keyTitle.Position = UDim2.new(0, 10, 0, 5)
+        keyTitle.Size = UDim2.new(1, -130, 0, 20)
+        keyTitle.Text = "TUŞ"
+        keyTitle.TextColor3 = colors.primary
+        keyTitle.TextSize = 14
+        keyTitle.Font = Enum.Font.GothamBold
+        keyTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local keyBtn = Instance.new("TextButton")
+        keyBtn.Parent = keyFrame
+        keyBtn.BackgroundColor3 = colors.primary
+        keyBtn.Position = UDim2.new(1, -90, 0, 15)
+        keyBtn.Size = UDim2.new(0, 70, 0, 30)
+        keyBtn.Text = troll.sikme.key and getKeyName(troll.sikme.key) or "ATA"
+        keyBtn.TextColor3 = colors.bg
+        keyBtn.Font = Enum.Font.GothamBold
+        
+        local clearBtn = Instance.new("TextButton")
+        clearBtn.Parent = keyFrame
+        clearBtn.BackgroundColor3 = colors.danger
+        clearBtn.Position = UDim2.new(1, -160, 0, 15)
+        clearBtn.Size = UDim2.new(0, 30, 0, 30)
+        clearBtn.Text = "X"
+        clearBtn.TextColor3 = colors.text
+        clearBtn.Font = Enum.Font.GothamBold
+        clearBtn.MouseButton1Click:Connect(function()
+            troll.sikme.key = nil
+            keyBtn.Text = "ATA"
+            keyLabel.Text = "─"
+        end)
+        
+        keyBtn.MouseButton1Click:Connect(function()
+            keyBtn.Text = "..."
+            local con
+            con = UserInputService.InputBegan:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Escape then
+                    con:Disconnect()
+                    keyBtn.Text = troll.sikme.key and getKeyName(troll.sikme.key) or "ATA"
+                elseif input.UserInputType == Enum.UserInputType.Keyboard then
+                    troll.sikme.key = input.KeyCode
+                    keyBtn.Text = getKeyName(input.KeyCode)
+                    keyLabel.Text = getKeyName(input.KeyCode)
+                    con:Disconnect()
+                end
+            end)
+        end)
+    end)
+    
+    return btn
+end
+
+local function createOtuzbirButton()
+    local btn = Instance.new("TextButton")
+    btn.Name = "otuzbir_TROLL"
+    btn.Parent = scrollFrame
+    btn.BackgroundColor3 = colors.bg
+    btn.BorderColor3 = colors.primary
+    btn.Size = UDim2.new(1, -10, 0, 80)
+    btn.Text = ""
+    btn.ZIndex = 13
+    btn.Visible = false
+    
+    trollButtonRefs.otuzbir = btn
+    
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Parent = btn
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Position = UDim2.new(0, 10, 0, 15)
+    iconLabel.Size = UDim2.new(0, 50, 0, 50)
+    iconLabel.Text = "💦"
+    iconLabel.TextColor3 = colors.primary
+    iconLabel.TextSize = 30
+    iconLabel.ZIndex = 14
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = btn
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Position = UDim2.new(0, 70, 0, 15)
+    nameLabel.Size = UDim2.new(1, -200, 0, 25)
+    nameLabel.Text = "31 ÇEKME"
+    nameLabel.TextColor3 = colors.text
+    nameLabel.TextSize = 18
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.ZIndex = 14
+    
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Parent = btn
+    descLabel.BackgroundTransparency = 1
+    descLabel.Position = UDim2.new(0, 70, 0, 40)
+    descLabel.Size = UDim2.new(1, -200, 0, 25)
+    descLabel.Text = "Kendi etrafında dön ve zıpla"
+    descLabel.TextColor3 = colors.textDim
+    descLabel.TextSize = 12
+    descLabel.Font = Enum.Font.Gotham
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.ZIndex = 14
+    
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Parent = btn
+    keyLabel.BackgroundColor3 = colors.card
+    keyLabel.BorderColor3 = colors.primary
+    keyLabel.Position = UDim2.new(1, -140, 0, 15)
+    keyLabel.Size = UDim2.new(0, 50, 0, 25)
+    keyLabel.Text = troll.otuzbir.key and getKeyName(troll.otuzbir.key) or "─"
+    keyLabel.TextColor3 = colors.primary
+    keyLabel.Font = Enum.Font.GothamBold
+    keyLabel.ZIndex = 14
+    
+    local status = Instance.new("TextLabel")
+    status.Name = "Status"
+    status.Parent = btn
+    status.BackgroundColor3 = troll.otuzbir.enabled and colors.success or colors.danger
+    status.Position = UDim2.new(1, -80, 0, 15)
+    status.Size = UDim2.new(0, 70, 0, 25)
+    status.Text = troll.otuzbir.enabled and "AKTİF" or "PASİF"
+    status.TextColor3 = colors.text
+    status.Font = Enum.Font.GothamBold
+    status.ZIndex = 14
+    
+    btn.MouseButton1Click:Connect(function()
+        troll.otuzbir.enabled = not troll.otuzbir.enabled
+        status.BackgroundColor3 = troll.otuzbir.enabled and colors.success or colors.danger
+        status.Text = troll.otuzbir.enabled and "AKTİF" or "PASİF"
+    end)
+    
+    btn.MouseButton2Click:Connect(function()
+        if _G.otuzbirSettings then _G.otuzbirSettings:Destroy() _G.otuzbirSettings = nil end
+        local menu = Instance.new("Frame")
+        menu.Parent = screenGui
+        menu.BackgroundColor3 = colors.bg
+        menu.BorderColor3 = colors.primary
+        menu.BorderSizePixel = 2
+        menu.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+        menu.Size = UDim2.new(0, 250, 0, 120)
+        menu.ZIndex = 200
+        menu.Active = true
+        menu.Draggable = true
+        _G.otuzbirSettings = menu
+        
+        local header = Instance.new("Frame")
+        header.Parent = menu
+        header.BackgroundColor3 = colors.primary
+        header.Size = UDim2.new(1, 0, 0, 30)
+        
+        local headerTitle = Instance.new("TextLabel")
+        headerTitle.Parent = header
+        headerTitle.BackgroundTransparency = 1
+        headerTitle.Position = UDim2.new(0, 10, 0, 0)
+        headerTitle.Size = UDim2.new(1, -50, 1, 0)
+        headerTitle.Text = "31 ÇEKME AYARLARI"
+        headerTitle.TextColor3 = colors.bg
+        headerTitle.Font = Enum.Font.GothamBold
+        headerTitle.TextSize = 12
+        headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local closeHeader = Instance.new("TextButton")
+        closeHeader.Parent = header
+        closeHeader.BackgroundColor3 = colors.danger
+        closeHeader.Position = UDim2.new(1, -30, 0, 0)
+        closeHeader.Size = UDim2.new(0, 30, 0, 30)
+        closeHeader.Text = "X"
+        closeHeader.TextColor3 = colors.text
+        closeHeader.Font = Enum.Font.GothamBold
+        closeHeader.MouseButton1Click:Connect(function() menu:Destroy() _G.otuzbirSettings = nil end)
+        
+        local keyFrame = Instance.new("Frame")
+        keyFrame.Parent = menu
+        keyFrame.BackgroundColor3 = colors.card
+        keyFrame.BorderColor3 = colors.primary
+        keyFrame.Position = UDim2.new(0, 10, 0, 40)
+        keyFrame.Size = UDim2.new(1, -20, 0, 60)
+        
+        local keyTitle = Instance.new("TextLabel")
+        keyTitle.Parent = keyFrame
+        keyTitle.BackgroundTransparency = 1
+        keyTitle.Position = UDim2.new(0, 10, 0, 5)
+        keyTitle.Size = UDim2.new(1, -130, 0, 20)
+        keyTitle.Text = "TUŞ"
+        keyTitle.TextColor3 = colors.primary
+        keyTitle.TextSize = 14
+        keyTitle.Font = Enum.Font.GothamBold
+        keyTitle.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local keyBtn = Instance.new("TextButton")
+        keyBtn.Parent = keyFrame
+        keyBtn.BackgroundColor3 = colors.primary
+        keyBtn.Position = UDim2.new(1, -90, 0, 15)
+        keyBtn.Size = UDim2.new(0, 70, 0, 30)
+        keyBtn.Text = troll.otuzbir.key and getKeyName(troll.otuzbir.key) or "ATA"
+        keyBtn.TextColor3 = colors.bg
+        keyBtn.Font = Enum.Font.GothamBold
+        
+        local clearBtn = Instance.new("TextButton")
+        clearBtn.Parent = keyFrame
+        clearBtn.BackgroundColor3 = colors.danger
+        clearBtn.Position = UDim2.new(1, -160, 0, 15)
+        clearBtn.Size = UDim2.new(0, 30, 0, 30)
+        clearBtn.Text = "X"
+        clearBtn.TextColor3 = colors.text
+        clearBtn.Font = Enum.Font.GothamBold
+        clearBtn.MouseButton1Click:Connect(function()
+            troll.otuzbir.key = nil
+            keyBtn.Text = "ATA"
+            keyLabel.Text = "─"
+        end)
+        
+        keyBtn.MouseButton1Click:Connect(function()
+            keyBtn.Text = "..."
+            local con
+            con = UserInputService.InputBegan:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Escape then
+                    con:Disconnect()
+                    keyBtn.Text = troll.otuzbir.key and getKeyName(troll.otuzbir.key) or "ATA"
+                elseif input.UserInputType == Enum.UserInputType.Keyboard then
+                    troll.otuzbir.key = input.KeyCode
+                    keyBtn.Text = getKeyName(input.KeyCode)
+                    keyLabel.Text = getKeyName(input.KeyCode)
+                    con:Disconnect()
+                end
+            end)
+        end)
     end)
     
     return btn
@@ -1093,7 +1428,6 @@ local function createButton(id, name, icon, category)
             
         elseif id == "triggerbot" then
             features.triggerbot.delay = 0
-            features.triggerbot.range = 200
             
             local rangeFrame = Instance.new("Frame")
             rangeFrame.Parent = menu
@@ -1785,6 +2119,8 @@ createTrollButton("headless", "HEADLESS", "👻")
 createTrollButton("freeze", "FREEZE", "❄️")
 
 local pushBtn = createPushButton()
+local sikmeBtn = createSikmeButton()
+local otuzbirBtn = createOtuzbirButton()
 local friendBtn = createFriendListButton()
 local clickTpBtn = createClickTeleportButton()
 local guiKeyBtn = createGuiKeyButton()
@@ -1811,6 +2147,8 @@ combatTab.MouseButton1Click:Connect(function()
     clickTpBtn.Visible = false
     guiKeyBtn.Visible = false
     pushBtn.Visible = false
+    sikmeBtn.Visible = false
+    otuzbirBtn.Visible = false
 end)
 
 movementTab.MouseButton1Click:Connect(function()
@@ -1833,6 +2171,8 @@ movementTab.MouseButton1Click:Connect(function()
     clickTpBtn.Visible = false
     guiKeyBtn.Visible = false
     pushBtn.Visible = false
+    sikmeBtn.Visible = false
+    otuzbirBtn.Visible = false
 end)
 
 visualTab.MouseButton1Click:Connect(function()
@@ -1855,6 +2195,8 @@ visualTab.MouseButton1Click:Connect(function()
     clickTpBtn.Visible = false
     guiKeyBtn.Visible = false
     pushBtn.Visible = false
+    sikmeBtn.Visible = false
+    otuzbirBtn.Visible = false
 end)
 
 utilityTab.MouseButton1Click:Connect(function()
@@ -1877,6 +2219,8 @@ utilityTab.MouseButton1Click:Connect(function()
     clickTpBtn.Visible = true
     guiKeyBtn.Visible = true
     pushBtn.Visible = false
+    sikmeBtn.Visible = false
+    otuzbirBtn.Visible = false
 end)
 
 trollTab.MouseButton1Click:Connect(function()
@@ -1899,6 +2243,8 @@ trollTab.MouseButton1Click:Connect(function()
     clickTpBtn.Visible = false
     guiKeyBtn.Visible = false
     pushBtn.Visible = true
+    sikmeBtn.Visible = true
+    otuzbirBtn.Visible = true
 end)
 
 local function updateButtonStatus(id, enabled)
@@ -1995,9 +2341,7 @@ mouse.Button1Down:Connect(function()
             end
         end
     end
-end)
-
-mouse.Button1Down:Connect(function()
+    
     if troll.push.enabled then
         local mousePos = Vector2.new(mouse.X, mouse.Y)
         local ray = workspace.CurrentCamera:ScreenPointToRay(mousePos.X, mousePos.Y)
@@ -2011,6 +2355,36 @@ mouse.Button1Down:Connect(function()
                 local direction = (target.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Unit
                 target.Character.HumanoidRootPart.Velocity = direction * troll.push.power * 10
             end
+        end
+    end
+    
+    if troll.sikme.enabled then
+        local mousePos = Vector2.new(mouse.X, mouse.Y)
+        local ray = workspace.CurrentCamera:ScreenPointToRay(mousePos.X, mousePos.Y)
+        local params = RaycastParams.new()
+        params.FilterDescendantsInstances = {player.Character}
+        params.FilterType = Enum.RaycastFilterType.Blacklist
+        local result = workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
+        if result and result.Instance and result.Instance:IsDescendantOf(Players) then
+            local target = Players:GetPlayerFromCharacter(result.Instance.Parent)
+            if target and target.Character then
+                for _, part in pairs(target.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Size = Vector3.new(2, 10, 2)
+                        part.BrickColor = BrickColor.new("Bright red")
+                    end
+                end
+            end
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if troll.otuzbir.enabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local root = player.Character.HumanoidRootPart
+        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(30), 0)
+        if player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end
 end)
@@ -2118,7 +2492,7 @@ RunService.RenderStepped:Connect(function()
                 local smoothness = features.aimbot.smoothness / 10
                 local newX = currentMousePos.X + (targetMousePos.X - currentMousePos.X) * smoothness
                 local newY = currentMousePos.Y + (targetMousePos.Y - currentMousePos.Y) * smoothness
-                mousemoverel(newX - currentMousePos.X, newY - currentMousePos.Y)
+                safeFunction(_G.mousemoverel, newX - currentMousePos.X, newY - currentMousePos.Y)
             end
         end
     end
@@ -2134,7 +2508,7 @@ RunService.RenderStepped:Connect(function()
                     local pos = workspace.CurrentCamera:WorldToViewportPoint(v.Character.Head.Position)
                     local center = Vector2.new(workspace.CurrentCamera.ViewportSize.X/2, workspace.CurrentCamera.ViewportSize.Y/2)
                     if (Vector2.new(pos.X, pos.Y) - center).Magnitude < 50 then
-                        mouse1click()
+                        safeFunction(_G.mouse1click)
                     end
                 end
             end
@@ -2224,4 +2598,3 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-```
