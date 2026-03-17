@@ -517,7 +517,7 @@ function loadMainPanel()
     discordLabel.BackgroundTransparency = 1
     discordLabel.Size = UDim2.new(1, -40, 0, 25)
     discordLabel.Position = UDim2.new(0, 20, 0, 110)
-    discordLabel.Text = "Tester: Lua_ui"
+    discordLabel.Text = "Tester: Lua.7"
     discordLabel.TextColor3 = colors.text
     discordLabel.TextSize = 14
     discordLabel.Font = Enum.Font.Gotham
