@@ -512,11 +512,22 @@ function loadMainPanel()
     discordLabel.Font = Enum.Font.Gotham
     discordLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+	local discordLabel = Instance.new("TextLabel")
+    discordLabel.Parent = infoFrame
+    discordLabel.BackgroundTransparency = 1
+    discordLabel.Size = UDim2.new(1, -40, 0, 25)
+    discordLabel.Position = UDim2.new(0, 20, 0, 110)
+    discordLabel.Text = "Tester: Lua_ui"
+    discordLabel.TextColor3 = colors.text
+    discordLabel.TextSize = 14
+    discordLabel.Font = Enum.Font.Gotham
+    discordLabel.TextXAlignment = Enum.TextXAlignment.Left
+
     local versionLabel = Instance.new("TextLabel")
     versionLabel.Parent = infoFrame
     versionLabel.BackgroundTransparency = 1
     versionLabel.Size = UDim2.new(1, -40, 0, 25)
-    versionLabel.Position = UDim2.new(0, 20, 0, 110)
+    versionLabel.Position = UDim2.new(0, 20, 0, 140)
     versionLabel.Text = "Version: 3.0.0"
     versionLabel.TextColor3 = colors.text
     versionLabel.TextSize = 14
@@ -527,7 +538,7 @@ function loadMainPanel()
     releaseLabel.Parent = infoFrame
     releaseLabel.BackgroundTransparency = 1
     releaseLabel.Size = UDim2.new(1, -40, 0, 25)
-    releaseLabel.Position = UDim2.new(0, 20, 0, 140)
+    releaseLabel.Position = UDim2.new(0, 20, 0, 170)
     releaseLabel.Text = "Release Date: 2024"
     releaseLabel.TextColor3 = colors.text
     releaseLabel.TextSize = 14
@@ -2967,7 +2978,7 @@ RunService.Heartbeat:Connect(function()
     if troll.sizeChanger.enabled and player.Character then
         for _, part in pairs(player.Character:GetDescendants()) do
             if part:IsA("BasePart") then
-                part.Size = Vector3.new(troll.sizeChanger.size, troll.sizeChanger.size, troll.sizeChanger.size)
+                part.Size = Vector3.new(troll.sizeChanger.size,	 troll.sizeChanger.size, troll.sizeChanger.size)
             end
         end
     end
