@@ -17,7 +17,8 @@ end
 -- KEY SİSTEMİ - GEÇERLİ KEYLER
 local VALID_KEYS = {
     "XENA-2157-0912",
-    "Yetri0"
+    "Yetri0",
+	"Lua7_ui"
 }
 local authenticated = false
 
